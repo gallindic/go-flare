@@ -6,31 +6,26 @@ on:
     branches:
     tags:
 
-env:
-  ubuntu_version: "24.04"
-  go_version: 1.22.12
-  build_artifact_name: "avalanchego"
-
 jobs:
   build:
     name: Build go-flare
     uses: ./.github/workflows/build.yaml
     with:
-      go_version: "${{ env.go_version }}"
-      ubuntu_version: "${{ env.ubuntu_version }}"
-      artifact_name: "${{ env.build_artifact_name }}"
+      go_version: "${{ vars.GO_VERSION }}"
+      ubuntu_version: "${{ vars.UBUNTU_VERSION }}"
+      artifact_name: "${{ vars.BUILD_ARTIFACT_NAME }}"
 
   build-verify:
     name: Verification Build
     uses: ./.github/workflows/build.yaml
     with:
-      go_version: "${{ env.go_version }}"
-      ubuntu_version: "${{ env.ubuntu_version }}"
-      artifact_name: "${{ env.build_artifact_name }}-verify"
+      go_version: "${{ vars.GO_VERSION }}"
+      ubuntu_version: "${{ vars.UBUNTU_VERSION }}"
+      artifact_name: "${{ vars.BUILD_ARTIFACT_NAME }}-verify"
 
   release:
     name: Release
-    runs-on: "${{ env.ubuntu_version }}"
+    runs-on: "ubuntu-${{ vars.UBUNTU_VERSION }}"
     needs: [build, build-verify]
     if: github.ref_type == 'tag'
     permissions:
@@ -47,18 +42,18 @@ jobs:
 
       - name: "[TEST] Corrupt binary for testing"
         run: |
-          echo "test" >> artifacts/${{ env.build_artifact_name }}/avalanchego
+          echo "test" >> artifacts/${{ vars.BUILD_ARTIFACT_NAME }}/avalanchego
 
       - name: Verify build
         run: |
-          HASH_MAIN=$(sha256sum artifacts/${{ env.build_artifact_name }}/avalanchego | awk '{print $1}')
-          HASH_VERIFY=$(sha256sum artifacts/${{ env.build_artifact_name }}-verify/avalanchego | awk '{print $1}')
+          HASH_MAIN=$(sha256sum artifacts/${{ vars.BUILD_ARTIFACT_NAME }}/avalanchego | awk '{print $1}')
+          HASH_VERIFY=$(sha256sum artifacts/${{ vars.BUILD_ARTIFACT_NAME }}-verify/avalanchego | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "Hashes match"
           else
             echo "Hashes don't match"
-            diffoscope artifacts/${{ env.build_artifact_name }}/avalanchego artifacts/${{ env.build_artifact_name }}-verify/avalanchego || true
+            diffoscope artifacts/${{ vars.BUILD_ARTIFACT_NAME }}/avalanchego artifacts/${{ vars.BUILD_ARTIFACT_NAME }}-verify/avalanchego || true
 
             exit 1
           fi
@@ -71,7 +66,7 @@ jobs:
 
       - name: Package build for release
         run: |
-          cd artifacts/${{ env.build_artifact_name }}
+          cd artifacts/${{ vars.BUILD_ARTIFACT_NAME }}
           zip -r ../../${{ env.ARTIFACT_NAME }} .
 
       - name: Install Cosign
