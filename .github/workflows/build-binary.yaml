@@ -7,50 +7,55 @@ on:
     tags:
 
 env:
+  ubuntu_version: "24.04"
   go_version: 1.22.12
+  build_artifact_name: "avalanchego"
 
 jobs:
   build:
     name: Build go-flare
     uses: ./.github/workflows/build.yaml
     with:
-      go_version: "1.22.12"
-      ubuntu_version: "24.04"
-      artifact_name: "avalanchego"
+      go_version: "${{ env.go_version }}"
+      ubuntu_version: "${{ env.ubuntu_version }}"
+      artifact_name: "${{ env.build_artifact_name }}"
 
   build-verify:
     name: Verification Build
     uses: ./.github/workflows/build.yaml
     with:
-      go_version: "1.22.12"
-      ubuntu_version: "24.04"
-      artifact_name: "avalanchego-verify"
+      go_version: "${{ env.go_version }}"
+      ubuntu_version: "${{ env.ubuntu_version }}"
+      artifact_name: "${{ env.build_artifact_name }}-verify"
 
   release:
     name: Release
-    runs-on: ubuntu-24.04
+    runs-on: "${{ env.ubuntu_version }}"
     needs: [build, build-verify]
     if: github.ref_type == 'tag'
     permissions:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v3
+      - run: sudo apt-get install -y diffoscope
 
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # @v3
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # @v4
         with:
           path: artifacts
 
       - name: Verify build
         run: |
-          HASH_MAIN=$(sha256sum artifacts/avalanchego/avalanchego | awk '{print $1}')
-          HASH_VERIFY=$(sha256sum artifacts/avalanchego-verify/avalanchego | awk '{print $1}')
+          HASH_MAIN=$(sha256sum artifacts/${{ env.build_artifact_name }}/avalanchego | awk '{print $1}')
+          HASH_VERIFY=$(sha256sum artifacts/${{ env.build_artifact_name }}-verify/avalanchego | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "Hashes match"
           else
             echo "Hashes don't match"
+            diffoscope artifacts/${{ env.build_artifact_name }}/avalanchego artifacts/${{ env.build_artifact_name }}-verify/avalanchego || true
+
             exit 1
           fi
 
@@ -62,11 +67,11 @@ jobs:
 
       - name: Package build for release
         run: |
-          cd artifacts/avalanchego
+          cd artifacts/${{ env.build_artifact_name }}
           zip -r ../../${{ env.ARTIFACT_NAME }} .
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.8.1
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a  # @v3.8.1
 
       - name: Sign release binary
         env:
@@ -89,13 +94,13 @@ jobs:
             ${{ env.ARTIFACT_NAME }}
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844  # @v1
         with:
           body: "TODO"
           files: ${{ env.ARTIFACT_NAME }}*
 
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # @v4
         with:
           name: dist-bin
           path: ${{ env.ARTIFACT_NAME }}
