@@ -36,13 +36,13 @@ jobs:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
 
       - name: Download build artifacts
-        uses: slsa-framework/slsa-github-generator/actions/secure-download-folder@v2.0.0
+        uses: slsa-framework/slsa-github-generator/actions/secure-download-folder@v2.1.0
         with:
           name: ${{ needs.build.outputs.build-artifacts-name }}
           path: artifacts/build
 
       - name: Download verify artifacts
-        uses: slsa-framework/slsa-github-generator/actions/secure-download-folder@v2.0.0
+        uses: slsa-framework/slsa-github-generator/actions/secure-download-folder@v2.1.0
         with:
           name: ${{ needs.build-verify.outputs.build-artifacts-name }}
           path: artifacts/build-verify
