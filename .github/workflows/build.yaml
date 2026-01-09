@@ -20,6 +20,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-${{ inputs.ubuntu_version }}
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
     steps:
     - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # @v3
       with:
@@ -43,7 +45,8 @@ jobs:
       id: hash
       run: |
         cd avalanchego/build/
-        echo "hashes=$(sha256sum * | base64 -w0)" >> "$GITHUB_OUTPUT"
+        sha256sum * | awk '{print $2":"$1}' > ../hashes.txt
+        echo "hashes=$(base64 -w0 < ../hashes.txt)" >> "$GITHUB_OUTPUT"
 
     - name: Upload build
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # @v4
