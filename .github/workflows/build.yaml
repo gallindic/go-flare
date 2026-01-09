@@ -12,6 +12,10 @@ on:
       artifact_name:
         required: true
         type: string
+    outputs:
+      hashes:
+        description: "Hashes of build artifacts"
+        value: ${{ jobs.build.outputs.hashes }}
 
 jobs:
   build:
@@ -34,6 +38,12 @@ jobs:
       run: |
         cd avalanchego
         ./scripts/build.sh
+
+    - name: Generate hashes
+      id: hash
+      run: |
+        cd avalanchego/build/
+        echo "hashes=$(sha256sum * | base64 -w0)" >> "$GITHUB_OUTPUT"
 
     - name: Upload build
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # @v4
