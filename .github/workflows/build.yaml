@@ -12,21 +12,15 @@ on:
       artifact_name:
         required: true
         type: string
-    outputs:
-      hashes:
-        description: "Hashes of build artifacts"
-        value: ${{ jobs.build.outputs.hashes }}
 
 jobs:
   build:
     runs-on: ubuntu-${{ inputs.ubuntu_version }}
-    outputs:
-      hashes: ${{ steps.hash.outputs.hashes }}
     steps:
     - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # @v3
       with:
         fetch-depth: 0
-
+  
     - name: Set up Go
       uses: actions/setup-go@be3c94b385c4f180051c996d336f57a34c397495 # @v3
       with:
@@ -40,16 +34,6 @@ jobs:
       run: |
         cd avalanchego
         ./scripts/build.sh
-
-    - name: Generate hashes
-      id: hash
-      run: |
-        cd avalanchego/build/
-        sha256sum * | awk '{print $2":"$1}' > ../../hashes.txt
-        cat ../../hashes.txt  # Debug: show raw format
-        base64 -w0 < ../../hashes.txt > ../../hashes.b64
-        cat ../../hashes.b64  # Debug: show base64
-        echo "hashes=$(cat ../../hashes.b64)" >> "$GITHUB_OUTPUT"
 
     - name: Upload build
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # @v4

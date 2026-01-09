@@ -23,22 +23,11 @@ jobs:
       ubuntu_version: "${{ vars.UBUNTU_VERSION }}"
       artifact_name: "${{ vars.BUILD_ARTIFACT_NAME }}-verify"
 
-  provenance:
-    needs: [build, build-verify]
-    name: Generata SLSA Provenance
-    permissions:
-      actions: read
-      id-token: write
-      contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.0.0
-    with:
-      base64-subjects: "${{ needs.build.outputs.hashes }}"
-      upload-assets: true
-      compile-generator: true
-
   release:
     name: Release
     runs-on: "ubuntu-${{ vars.UBUNTU_VERSION }}"
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
     needs: [build, build-verify]
     if: github.ref_type == 'tag'
     permissions:
@@ -79,6 +68,11 @@ jobs:
           cd artifacts/${{ vars.BUILD_ARTIFACT_NAME }}
           zip -r ../../${{ env.ARTIFACT_NAME }} .
 
+      - name: Generate hash of release zip
+        id: hash
+        run: |
+          echo "hashes=$(sha256sum ${{ env.ARTIFACT_NAME }} | awk '{print $2":"$1}' | base64 -w0)" >> "$GITHUB_OUTPUT"
+
 #      - name: Install Cosign
 #        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a  # v3.8.1
 #      
@@ -113,3 +107,17 @@ jobs:
         with:
           name: dist-bin
           path: ${{ env.ARTIFACT_NAME }}
+
+  provenance:
+    needs: [release]
+    if: github.ref_type == 'tag'
+    name: Generata SLSA Provenance
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.0.0
+    with:
+      base64-subjects: "${{ needs.release.outputs.hashes }}"
+      upload-assets: true
+      compile-generator: true
