@@ -38,6 +38,8 @@ runs:
       shell: bash
       run: |
         cd avalanchego/build
+
+        mkdir -p "$(dirname "${{ inputs.slsa-layout-file }}")"
         
         attestations="["
         layout="["
