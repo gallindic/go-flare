@@ -38,7 +38,7 @@ jobs:
         uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v2.0.0
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
-          slsa-runner-label: "ubuntu-${{ inputs.ubuntu_version }}"
+          slsa-runner-label: "ubuntu-latest"
           slsa-build-action-path: "./.github/actions/build-callback"
           slsa-workflow-inputs: ${{ toJson(inputs) }}
 
