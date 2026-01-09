@@ -1,0 +1,78 @@
+name: 'Build Callback Action'
+description: 'Builds go-flare binaries for SLSA provenance'
+inputs:
+  slsa-workflow-inputs:
+    description: 'All inputs as JSON'
+    required: true
+  slsa-layout-file:
+    description: 'Location to store layout content'
+    required: true
+  go_version:
+    description: 'Go version'
+    required: true
+  ubuntu_version:
+    description: 'Ubuntu version'
+    required: true
+
+outputs:
+  attestations:
+    description: 'Attestation metadata for built artifacts'
+    value: ${{ steps.generate-attestations.outputs.attestations }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@be3c94b385c4f180051c996d336f57a34c397495
+      with:
+        go-version: ${{ inputs.go_version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: sudo apt-get update -y && sudo apt-get install -y rsync
+
+    - name: Build
+      shell: bash
+      env:
+        GOPATH: ${{ github.workspace }}/go
+      run: |
+        cd avalanchego
+        ./scripts/build.sh
+
+    - name: Generate attestations
+      id: generate-attestations
+      shell: bash
+      run: |
+        cd avalanchego/build
+        
+        # Generate attestation metadata
+        attestations="["
+        first=true
+        
+        for binary in avalanchego plugins/evm; do
+          if [ -f "$binary" ]; then
+            name=$(basename "$binary")
+            hash=$(sha256sum "$binary" | awk '{print $1}')
+            
+            if [ "$first" = true ]; then
+              first=false
+            else
+              attestations+=","
+            fi
+            
+            attestations+="{\"name\":\"$name\",\"sha256\":\"$hash\"}"
+          fi
+        done
+        
+        attestations+="]"
+        echo "attestations=$attestations" >> "$GITHUB_OUTPUT"
+        
+        # Store artifacts for secure upload
+        mkdir -p ${{ github.workspace }}/slsa-artifacts
+        cp -r . ${{ github.workspace }}/slsa-artifacts/
+
+    - name: Secure upload
+      uses: slsa-framework/slsa-github-generator/actions/secure-upload-folder@v2.0.0
+      with:
+        name: build-artifacts
+        path: ${{ github.workspace }}/slsa-artifacts
