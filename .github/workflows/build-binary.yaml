@@ -9,14 +9,14 @@ on:
 jobs:
   build:
     name: Build go-flare with SLSA
-    uses: ./.github/workflows/builder_slsa3.yml
+    uses: ./.github/workflows/builder_slsa3.yaml
     with:
       go_version: "${{ vars.GO_VERSION }}"
       ubuntu_version: "${{ vars.UBUNTU_VERSION }}"
 
   #build-verify:
   #  name: Verification Build
-  #  uses: ./.github/workflows/builder_slsa3.yml
+  #  uses: ./.github/workflows/builder_slsa3.yaml
   #  with:
   #    go_version: "${{ vars.GO_VERSION }}"
   #    ubuntu_version: "${{ vars.UBUNTU_VERSION }}"
