@@ -33,43 +33,10 @@ runs:
         cd avalanchego
         ./scripts/build.sh
 
-    - name: Generate attestations
-      id: generate-attestations
+    - name: Generate layout file
+      id: generate-layout
+      env:
+        SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
+        BUILD_DIR: avalanchego/build
       shell: bash
-      run: |
-        cd avalanchego/build
-        
-        # Ensure output directory exists
-        LAYOUT_FILE="${{ inputs.slsa-layout-file }}"
-        mkdir -p "$(dirname "$LAYOUT_FILE")"
-        
-        # Build subjects array
-        subjects=""
-        for binary in avalanchego plugins/evm; do
-          if [ -f "$binary" ]; then
-            name=$(basename "$binary")
-            hash=$(sha256sum "$binary" | awk '{print $1}')
-            
-            if [ -n "$subjects" ]; then
-              subjects+=","
-            fi
-            
-            subjects+="{\"name\":\"$name\",\"digest\":{\"sha256\":\"$hash\"}}"
-          fi
-        done
-        
-        # Write layout file
-        cat > "$LAYOUT_FILE" << EOF
-        {
-          "version": 1,
-          "attestations": [
-            {
-              "name": "go-flare-binaries",
-              "subjects": [$subjects]
-            }
-          ]
-        }
-        EOF
-        
-        # Output for framework
-        echo "attestations=[$subjects]" >> "$GITHUB_OUTPUT"
+      run: ./../__TOOL_ACTION_DIR__/generate-layout.sh
