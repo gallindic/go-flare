@@ -66,13 +66,3 @@ runs:
         
         attestations+="]"
         echo "attestations=$attestations" >> "$GITHUB_OUTPUT"
-        
-        # Store artifacts for secure upload
-        mkdir -p ${{ github.workspace }}/slsa-artifacts
-        cp -r . ${{ github.workspace }}/slsa-artifacts/
-
-    - name: Secure upload
-      uses: slsa-framework/slsa-github-generator/actions/secure-upload-folder@v2.1.0
-      with:
-        name: build-artifacts
-        path: ${{ github.workspace }}/slsa-artifacts
