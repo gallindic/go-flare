@@ -7,12 +7,6 @@ inputs:
   slsa-layout-file:
     description: 'Location to store layout content'
     required: true
-  go_version:
-    description: 'Go version'
-    required: true
-  ubuntu_version:
-    description: 'Ubuntu version'
-    required: true
 
 outputs:
   attestations:
@@ -25,7 +19,7 @@ runs:
     - name: Set up Go
       uses: actions/setup-go@be3c94b385c4f180051c996d336f57a34c397495
       with:
-        go-version: ${{ inputs.go_version }}
+        go-version: ${{ fromJSON(inputs.slsa-workflow-inputs).go_version }}
 
     - name: Install dependencies
       shell: bash
@@ -45,7 +39,6 @@ runs:
       run: |
         cd avalanchego/build
         
-        # Generate attestation metadata
         attestations="["
         first=true
         
