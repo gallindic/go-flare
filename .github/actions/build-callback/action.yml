@@ -40,22 +40,29 @@ runs:
         cd avalanchego/build
         
         attestations="["
+        layout="["
         first=true
         
         for binary in avalanchego plugins/evm; do
           if [ -f "$binary" ]; then
             name=$(basename "$binary")
             hash=$(sha256sum "$binary" | awk '{print $1}')
+            fullpath="$(pwd)/$binary"
             
             if [ "$first" = true ]; then
               first=false
             else
               attestations+=","
+              layout+=","
             fi
             
             attestations+="{\"name\":\"$name\",\"sha256\":\"$hash\"}"
+            layout+="{\"name\":\"$name\",\"path\":\"$fullpath\",\"sha256\":\"$hash\"}"
           fi
         done
         
         attestations+="]"
+        layout+="]"
+        
         echo "attestations=$attestations" >> "$GITHUB_OUTPUT"
+        echo "$layout" > "${{ inputs.slsa-layout-file }}"
