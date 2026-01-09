@@ -45,8 +45,11 @@ jobs:
       id: hash
       run: |
         cd avalanchego/build/
-        sha256sum * | awk '{print $2":"$1}' > ../hashes.txt
-        echo "hashes=$(base64 -w0 < ../hashes.txt)" >> "$GITHUB_OUTPUT"
+        sha256sum * | awk '{print $2":"$1}' > ../../hashes.txt
+        cat ../../hashes.txt  # Debug: show raw format
+        base64 -w0 < ../../hashes.txt > ../../hashes.b64
+        cat ../../hashes.b64  # Debug: show base64
+        echo "hashes=$(cat ../../hashes.b64)" >> "$GITHUB_OUTPUT"
 
     - name: Upload build
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # @v4
