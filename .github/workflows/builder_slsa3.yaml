@@ -1,0 +1,54 @@
+name: SLSA3 Builder
+
+on:
+  workflow_call:
+    inputs:
+      go_version:
+        required: true
+        type: string
+      ubuntu_version:
+        required: true
+        type: string
+    outputs:
+      build-artifacts-name:
+        description: "Name of uploaded artifacts"
+        value: ${{ jobs.slsa-run.outputs.build-artifacts-name }}
+      attestations-download-name:
+        description: "Name of attestations"
+        value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
+
+permissions: read-all
+
+jobs:
+  slsa-setup:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-${{ inputs.ubuntu_version }}
+    outputs:
+      slsa-token: ${{ steps.setup.outputs.slsa-token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+        with:
+          fetch-depth: 0
+
+      - name: Setup SLSA
+        id: setup
+        uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v2.1.0
+        with:
+          slsa-workflow-recipient: "delegator_generic_slsa3.yml"
+          slsa-runner-label: "ubuntu-24.04"
+          slsa-build-action-path: "./.github/actions/build-callback"
+          slsa-workflow-inputs: ${{ toJson(inputs) }}
+
+  slsa-run:
+    needs: [slsa-setup]
+    permissions:
+      id-token: write
+      contents: write
+      packages: write
+      actions: read
+    uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v2.1.0
+    with:
+      slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
