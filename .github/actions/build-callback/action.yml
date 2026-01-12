@@ -64,7 +64,13 @@ runs:
         BUILD_DIR: ./../__TOOL_CHECKOUT_DIR__/avalanchego/build
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/generate-layout.sh
-    
+
+    - name: Copy binaries for secure upload
+      shell: bash
+      run: |
+        mkdir -p ./binaries
+        cp -r ./../__TOOL_CHECKOUT_DIR__/avalanchego/build/* ./binaries/
+        
     - name: Generate random suffix
       id: rng
       shell: bash
