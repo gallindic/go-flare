@@ -53,7 +53,7 @@ jobs:
         run: |
           echo $(ls -la artifacts/avalanchego/)
           echo $(ls -la artifacts/avalanchego-verification/)
-          HASH_MAIN=$(sha256sum artifacts/avalanchego/binaries/avalanchego | awk '{print $1}')
+          HASH_MAIN=$(sha256sum artifacts/avalanchego/avalanchego | awk '{print $1}')
           HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification/avalanchego | awk '{print $1}')
           
           echo "Main: $HASH_MAIN, Verify: $HASH_VERIFY"
@@ -63,7 +63,7 @@ jobs:
           else
             echo "Hashes don't match"
 
-            diffoscope artifacts/avalanchego/binaries/avalanchego artifacts/avalanchego-verification/avalanchego || true
+            diffoscope artifacts/avalanchego/avalanchego artifacts/avalanchego-verification/avalanchego || true
             
             exit 1
           fi
