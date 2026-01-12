@@ -51,9 +51,9 @@ jobs:
 
       - name: Verify reproducible build
         run: |
-          echo $(ls -la artifacts/avalanchego/)
+          echo $(ls -la artifacts/avalanchego/avalanchego/)
           echo $(ls -la artifacts/avalanchego-verification/)
-          HASH_MAIN=$(sha256sum artifacts/avalanchego/avalanchego | awk '{print $1}')
+          HASH_MAIN=$(sha256sum artifacts/avalanchego/avalanchego/binaries/avalanchego | awk '{print $1}')
           HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification/avalanchego | awk '{print $1}')
           
           echo "Main: $HASH_MAIN, Verify: $HASH_VERIFY"
