@@ -15,12 +15,14 @@ jobs:
       ubuntu_version: "${{ vars.UBUNTU_VERSION }}"
       build_artifact_name: "avalanchego"
 
-  #build-verify:
-  #  name: Verification Build
-  #  uses: ./.github/workflows/builder_slsa3.yaml
-  #  with:
-  #    go_version: "${{ vars.GO_VERSION }}"
-  #    ubuntu_version: "${{ vars.UBUNTU_VERSION }}"
+  build-verify:
+    #if: github.ref_type == 'tag'
+    name: Go Verification Build
+    uses: ./.github/workflows/build-verification.yaml
+    with:
+      go_version: "${{ vars.GO_VERSION }}"
+      ubuntu_version: "${{ vars.UBUNTU_VERSION }}"
+      build_artifact_name: "avalanchego-verification"
 
   release:
     name: Release

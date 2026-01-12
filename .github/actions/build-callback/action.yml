@@ -49,13 +49,10 @@ runs:
       run: sudo apt-get update -y && sudo apt-get install -y rsync
 
     - name: Build
-      working-directory: ./../__TOOL_CHECKOUT_DIR__
-      shell: bash
-      env:
-        GOPATH: ${{ github.workspace }}/go
-      run: |
-        cd avalanchego
-        ./scripts/build.sh
+      uses: ./../__TOOL_CHECKOUT_DIR__/.github/actions/build-go
+      with:
+        go_version: ${{ fromJSON(inputs.slsa-workflow-inputs).go_version }}
+        working_directory: ./../__TOOL_CHECKOUT_DIR__
 
     - name: Generate layout file
       id: generate-layout
@@ -68,12 +65,12 @@ runs:
     - name: Copy binaries for secure upload
       shell: bash
       run: |
-        mkdir -p ./binaries
-        cp -r ./../__TOOL_CHECKOUT_DIR__/avalanchego/build/* ./binaries/
+        mkdir -p ./artifacts
+        cp -r ./../__TOOL_CHECKOUT_DIR__/avalanchego/build/* ./artifacts/
 
     - name: Upload binaries
       id: upload
       uses: slsa-framework/slsa-github-generator/actions/delegator/secure-upload-folder@v2.1.0
       with:
         name: ${{ fromJSON(inputs.slsa-workflow-inputs).build_artifact_name }}
-        path: ./binaries/
+        path: ./artifacts/
