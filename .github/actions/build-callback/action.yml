@@ -81,4 +81,4 @@ runs:
       uses: slsa-framework/slsa-github-generator/actions/delegator/secure-upload-folder@v2.1.0
       with:
         name: ${{ steps.rng.outputs.artifact-name }}
-        path: ./../__TOOL_CHECKOUT_DIR__/avalanchego/build
+        path: ./binaries
