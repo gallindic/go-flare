@@ -8,7 +8,7 @@ inputs:
     description: 'Location to store layout content'
     required: true
 
-  # Unused secrets - framework requires these to be declared
+  # Unused secrets - SLSA BYOB framework requires these to be declared
   slsa-workflow-secret1: {}
   slsa-workflow-secret2: {}
   slsa-workflow-secret3: {}
@@ -39,15 +39,6 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up Go
-      uses: actions/setup-go@be3c94b385c4f180051c996d336f57a34c397495
-      with:
-        go-version: ${{ fromJSON(inputs.slsa-workflow-inputs).go_version }}
-
-    - name: Install dependencies
-      shell: bash
-      run: sudo apt-get update -y && sudo apt-get install -y rsync
-
     - name: Build
       uses: ./../__TOOL_CHECKOUT_DIR__/.github/actions/go-build
       with:
@@ -59,6 +50,7 @@ runs:
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
         BUILD_DIR: ./../__TOOL_CHECKOUT_DIR__/avalanchego/build
+        BINARY_NAME: ${{ fromJSON(inputs.slsa-workflow-inputs).build_artifact_name }}
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/generate-layout.sh
 

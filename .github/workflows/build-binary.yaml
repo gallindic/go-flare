@@ -38,13 +38,13 @@ jobs:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
 
       - name: Download build artifacts
-        uses: slsa-framework/slsa-github-generator/actions/delegator/secure-download-folder@v2.1.0
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.build.outputs.build-artifacts-name }}
           path: artifacts/
 
       - name: Download verification artifacts
-        uses: slsa-framework/slsa-github-generator/actions/delegator/secure-download-folder@v2.1.0
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.build-verification.outputs.build_artifact_name }}
           path: artifacts/build
@@ -55,10 +55,12 @@ jobs:
           HASH_VERIFY=$(sha256sum artifacts/build/avalanchego | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
-            echo "✓ Hashes match - build is reproducible"
+            echo "Hashes match - build is reproducible"
           else
-            echo "✗ Hashes don't match"
+            echo "Hashes don't match"
+
             diffoscope artifacts/build/avalanchego artifacts/build-verify/avalanchego || true
+            
             exit 1
           fi
 

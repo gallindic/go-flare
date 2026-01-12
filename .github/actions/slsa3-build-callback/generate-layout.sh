@@ -20,7 +20,7 @@ cat <<EOF > "$SLSA_OUTPUTS_ARTIFACTS_FILE"
 {
   "version": 1,
   "attestations": [{
-    "name": "go-flare-binaries",
+    "name": "$BINARY_NAME-binaries",
     "subjects": [${subjects}]
   }]
 }
