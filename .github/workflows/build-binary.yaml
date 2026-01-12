@@ -41,20 +41,20 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.build.outputs.build-artifacts-name }}
-          path: artifacts/
+          path: artifacts/avalanchego/
 
       - name: Download verification artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.build-verification.outputs.build_artifact_name }}
-          path: artifacts/
+          path: artifacts/avalanchego-verification
 
       - name: Verify reproducible build
         run: |
           echo $(ls -la artifacts/avalanchego/)
           echo $(ls -la artifacts/avalanchego-verification/)
-          HASH_MAIN=$(sha256sum artifacts/avalanchego/avalanchego | awk '{print $1}')
-          HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification/build/avalanchego | awk '{print $1}')
+          HASH_MAIN=$(sha256sum artifacts/avalanchego/binaries/avalanchego | awk '{print $1}')
+          HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification/avalanchego | awk '{print $1}')
           
           echo "Main: $HASH_MAIN, Verify: $HASH_VERIFY"
           
@@ -63,7 +63,7 @@ jobs:
           else
             echo "Hashes don't match"
 
-            diffoscope artifacts/avalanchego/avalanchego artifacts/avalanchego-verification/build/avalanchego || true
+            diffoscope artifacts/avalanchego/binaries/avalanchego artifacts/avalanchego-verification/avalanchego || true
             
             exit 1
           fi

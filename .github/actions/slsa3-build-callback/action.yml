@@ -57,12 +57,12 @@ runs:
     - name: Copy binaries for secure upload
       shell: bash
       run: |
-        mkdir -p ./artifacts
-        cp -r ./../__TOOL_CHECKOUT_DIR__/avalanchego/build/* ./artifacts/
+        mkdir -p ./binaries
+        cp -r ./../__TOOL_CHECKOUT_DIR__/avalanchego/build/* ./binaries/
 
     - name: Upload binaries
       id: upload
       uses: slsa-framework/slsa-github-generator/actions/delegator/secure-upload-folder@v2.1.0
       with:
         name: ${{ fromJSON(inputs.slsa-workflow-inputs).build_artifact_name }}
-        path: ./artifacts/
+        path: ./binaries/
