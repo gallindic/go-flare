@@ -41,13 +41,13 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.build.outputs.build-artifacts-name }}
-          path: artifacts/avalanchego
+          path: artifacts/
 
       - name: Download verification artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.build-verification.outputs.build_artifact_name }}
-          path: artifacts/avalanchego-verification
+          path: artifacts/
 
       - name: Verify reproducible build
         run: |
@@ -63,7 +63,7 @@ jobs:
           else
             echo "Hashes don't match"
 
-            diffoscope artifacts/avalanchego artifacts/build/avalanchego || true
+            diffoscope artifacts/avalanchego/avalanchego artifacts/avalanchego-verification/build/avalanchego || true
             
             exit 1
           fi
