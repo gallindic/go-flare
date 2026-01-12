@@ -56,7 +56,7 @@ jobs:
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
 
-  rename-attestations:
+  upload-attestations:
     needs: [slsa-run]
     runs-on: ubuntu-${{ inputs.ubuntu_version }}
     steps:

@@ -41,18 +41,18 @@ jobs:
         uses: slsa-framework/slsa-github-generator/actions/secure-download-folder@v2.1.0
         with:
           name: ${{ needs.build.outputs.build-artifacts-name }}
-          path: artifacts/build
+          path: artifacts/
 
-      - name: Download verify artifacts
+      - name: Download verification artifacts
         uses: slsa-framework/slsa-github-generator/actions/secure-download-folder@v2.1.0
         with:
-          name: ${{ needs.build-verify.outputs.build-artifacts-name }}
-          path: artifacts/build-verify
+          name: ${{ needs.build-verification.outputs.build_artifact_name }}
+          path: artifacts/build
 
       - name: Verify reproducible build
         run: |
-          HASH_MAIN=$(sha256sum artifacts/build/avalanchego | awk '{print $1}')
-          HASH_VERIFY=$(sha256sum artifacts/build-verify/avalanchego | awk '{print $1}')
+          HASH_MAIN=$(sha256sum artifacts/avalanchego | awk '{print $1}')
+          HASH_VERIFY=$(sha256sum artifacts/build/avalanchego | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "✓ Hashes match - build is reproducible"
