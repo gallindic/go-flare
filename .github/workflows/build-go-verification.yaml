@@ -12,6 +12,11 @@ on:
       build_artifact_name:
         required: true
         type: string
+    
+    outputs:
+      build_artifact_name:
+        description: "Name of uploaded artifacts"
+        value: ${{ inputs.build_artifact_name }}
 
 jobs:
   build:
