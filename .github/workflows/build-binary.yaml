@@ -53,13 +53,16 @@ jobs:
         run: |
           HASH_MAIN=$(sha256sum artifacts/avalanchego | awk '{print $1}')
           HASH_VERIFY=$(sha256sum artifacts/build/avalanchego | awk '{print $1}')
+          echo $(ls -la artifacts/)
+          echo $(ls -la artifacts/build/)
+          echo "Main: $HASH_MAIN, Verify: $HASH_VERIFY"
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "Hashes match - build is reproducible"
           else
             echo "Hashes don't match"
 
-            diffoscope artifacts/build/avalanchego artifacts/build-verify/avalanchego || true
+            diffoscope artifacts/avalanchego artifacts/build/avalanchego || true
             
             exit 1
           fi
