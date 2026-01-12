@@ -9,6 +9,9 @@ on:
       ubuntu_version:
         required: true
         type: string
+      build_artifact_name:
+        required: true
+        type: string
     outputs:
       build-artifacts-name:
         description: "Name of uploaded artifacts"
@@ -38,7 +41,7 @@ jobs:
         uses: slsa-framework/slsa-github-generator/actions/delegator/setup-generic@v2.1.0
         with:
           slsa-workflow-recipient: "delegator_generic_slsa3.yml"
-          slsa-runner-label: "ubuntu-24.04"
+          slsa-runner-label: "ubuntu-latest"  # Only supports ubuntu-latest for now
           slsa-build-action-path: "./.github/actions/build-callback"
           slsa-workflow-inputs: ${{ toJson(inputs) }}
 
