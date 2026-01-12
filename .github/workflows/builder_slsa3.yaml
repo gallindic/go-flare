@@ -52,19 +52,3 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v2.1.0
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
-
-  upload-build:
-    needs: [slsa-run]
-    runs-on: ubuntu-${{ inputs.ubuntu_version }}
-    steps:
-      - name: Download binaries
-        uses: slsa-framework/slsa-github-generator/actions/delegator/secure-download-folder@v2.1.0
-        with:
-          name: ${{ needs.slsa-run.outputs.build-artifacts-name }}
-          sha256: ${{ needs.slsa-run.outputs.build-artifacts-sha256 }}
-
-      - name: Upload to artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: go-flare-binaries
-          path: ${{ needs.slsa-run.outputs.build-artifacts-name }}/
