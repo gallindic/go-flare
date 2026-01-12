@@ -26,6 +26,7 @@ runs:
       run: sudo apt-get update -y && sudo apt-get install -y rsync
 
     - name: Build
+      working-directory: ./../__TOOL_CHECKOUT_DIR__
       shell: bash
       env:
         GOPATH: ${{ github.workspace }}/go
@@ -37,6 +38,6 @@ runs:
       id: generate-layout
       env:
         SLSA_OUTPUTS_ARTIFACTS_FILE: ${{ inputs.slsa-layout-file }}
-        BUILD_DIR: avalanchego/build
+        BUILD_DIR: ./../__TOOL_CHECKOUT_DIR__/avalanchego/build
       shell: bash
       run: ./../__TOOL_ACTION_DIR__/generate-layout.sh
