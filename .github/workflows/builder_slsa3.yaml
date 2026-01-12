@@ -62,10 +62,9 @@ jobs:
         with:
           name: ${{ needs.slsa-run.outputs.build-artifacts-name }}
           sha256: ${{ needs.slsa-run.outputs.build-artifacts-sha256 }}
-          path: binaries
 
       - name: Upload to artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: go-flare-binaries
-          path: binaries/
+          path: ${{ needs.slsa-run.outputs.build-artifacts-name }}/
