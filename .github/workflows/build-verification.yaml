@@ -22,7 +22,7 @@ jobs:
         fetch-depth: 0
   
     - name: Build
-      uses: ./.github/actions/go-build/action.yml
+      uses: ./.github/actions/go-build
       with:
         go_version: ${{ inputs.go_version }}
         working_directory: .
