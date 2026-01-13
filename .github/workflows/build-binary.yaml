@@ -51,8 +51,8 @@ jobs:
           tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego
           echo $(ls -la artifacts/)
           echo "---"
-          echo $(ls -la artifacts/${{ needs.build.outputs.attestations-download-name }})
-          tar -xzf artifacts/${{ needs.build.outputs.attestations-download-name }}/folder.tgz
+          echo $(ls -la artifacts/${{ inputs.build_artifact_name }}-attestations)
+          tar -xzf artifacts/${{ inputs.build_artifact_name }}-attestations/folder.tgz
 
       - name: Verify reproducible build
         run: |
