@@ -37,33 +37,25 @@ jobs:
 
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
 
-      - name: Download build artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: ${{ needs.build.outputs.build-artifacts-name }}
-          path: artifacts/avalanchego/
+          path: artifacts
 
-      - name: Download verification artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: ${{ needs.build-verification.outputs.build_artifact_name }}
-          path: artifacts/avalanchego-verification
+      - name: Extract avalanchego build
+        run: tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego
 
       - name: Verify reproducible build
         run: |
-          echo $(ls -la artifacts/avalanchego/avalanchego/)
-          echo $(ls -la artifacts/avalanchego-verification/)
-          HASH_MAIN=$(sha256sum artifacts/avalanchego/avalanchego/binaries/avalanchego | awk '{print $1}')
+          HASH_MAIN=$(sha256sum artifacts/avalanchego/binaries/avalanchego | awk '{print $1}')
           HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification/avalanchego | awk '{print $1}')
-          
-          echo "Main: $HASH_MAIN, Verify: $HASH_VERIFY"
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "Hashes match - build is reproducible"
           else
             echo "Hashes don't match"
 
-            diffoscope artifacts/avalanchego/avalanchego artifacts/avalanchego-verification/avalanchego || true
+            diffoscope artifacts/avalanchego/binaries/avalanchego artifacts/avalanchego-verification/avalanchego || true
             
             exit 1
           fi
