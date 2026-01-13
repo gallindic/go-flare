@@ -16,9 +16,9 @@ on:
       build-artifacts-name:
         description: "Name of uploaded artifacts"
         value: ${{ jobs.slsa-run.outputs.build-artifacts-name }}
-      attestations-download-name:
-        description: "Name of attestations"
-        value: ${{ jobs.slsa-run.outputs.attestations-download-name }}
+      attestations-artifact-name:
+        description: "Name of attestations artifact"
+        value: ${{ jobs.rename-attestations.outputs.attestations-artifact-name }}
 
 permissions: read-all
 
@@ -55,3 +55,26 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/delegator_generic_slsa3.yml@v2.1.0
     with:
       slsa-token: ${{ needs.slsa-setup.outputs.slsa-token }}
+
+  rename-attestations:
+    needs: [slsa-run]
+    runs-on: ubuntu-${{ inputs.ubuntu_version }}
+    outputs:
+      attestations-artifact-name: ${{ inputs.build_artifact_name }}-attestations
+    steps:
+      - name: Download attestations
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.slsa-run.outputs.attestations-download-name }}
+          path: attestations
+
+      - name: Upload with clean name
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.build_artifact_name }}-attestations
+          path: attestations/
+
+      - name: Delete original
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: ${{ needs.slsa-run.outputs.attestations-download-name }}

@@ -33,7 +33,11 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - run: sudo apt-get update -y && sudo apt-get install -y diffoscope-minimal
+      - name: Install diffoscope
+        run: sudo apt-get update -y && sudo apt-get install -y diffoscope-minimal
+      
+      - name: Install slsa-verifier
+        uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
 
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
 
@@ -42,8 +46,13 @@ jobs:
         with:
           path: artifacts
 
-      - name: Extract avalanchego build
-        run: tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego
+      - name: Extract artifacts
+        run: |
+          tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego
+          echo $(ls -la artifacts/)
+          echo "---"
+          echo $(ls -la artifacts/${{ needs.build.outputs.attestations-download-name }})
+          tar -xzf artifacts/${{ needs.build.outputs.attestations-download-name }}/folder.tgz
 
       - name: Verify reproducible build
         run: |
@@ -51,7 +60,7 @@ jobs:
           HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification/avalanchego | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
-            echo "Hashes match - build is reproducible"
+            echo "Hashes match"
           else
             echo "Hashes don't match"
 
@@ -59,6 +68,14 @@ jobs:
             
             exit 1
           fi
+
+      #- name: Verify SLSA provenance
+      #  run: |
+      #    slsa-verifier verify-artifact \
+      #      artifacts/avalanchego/binaries/avalanchego \
+      #      --provenance-path artifacts/${{ inputs.build_artifact_name }}-attestations/go-flare-binaries.build.slsa \
+      #      --source-uri github.com/${{ github.repository }} \
+      #      --builder-id https://github.com/${{ github.repository }}/.github/workflows/builder_slsa3.yaml@refs/tags/${{ github.ref_name }}
 
       #- name: Download attestations
       #  uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
