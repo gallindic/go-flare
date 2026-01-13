@@ -52,12 +52,12 @@ jobs:
 
       - name: Extract artifacts
         run: |
-          mkdir -p /artifacts/release/
+          mkdir -p release/
 
-          mv artifacts/avalanchego-verification/avalanchego /artifacts/release/avalanchego-verification
+          mv artifacts/avalanchego-verification/avalanchego release/avalanchego-verification
 
           tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego/
-          mv artifacts/avalanchego/binaries/avalanchego /artifacts/release/
+          mv artifacts/avalanchego/binaries/avalanchego release/
 
           echo $(ls -la artifacts/)
           echo "---"
@@ -68,20 +68,20 @@ jobs:
           echo "---"
           echo $(ls -ls artifacts/avalanchego-attestations/)
 
-          mv artifacts/avalanchego-attestations/*-slsa-attestations/avalanchego-binaries.build.slsa /artifacts/release/avalanchego.build.slsa
+          mv artifacts/avalanchego-attestations/*-slsa-attestations/avalanchego-binaries.build.slsa release/avalanchego.build.slsa
 
 
       - name: Verify reproducible build
         run: |
-          HASH_MAIN=$(sha256sum /artifacts/release/avalanchego | awk '{print $1}')
-          HASH_VERIFY=$(sha256sum /artifacts/release/avalanchego-verification | awk '{print $1}')
+          HASH_MAIN=$(sha256sum release/avalanchego | awk '{print $1}')
+          HASH_VERIFY=$(sha256sum release/avalanchego-verification | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "Hashes match"
           else
             echo "Hashes don't match"
 
-            diffoscope /artifacts/release/avalanchego /artifacts/release/avalanchego-verification || true
+            diffoscope release/avalanchego release/avalanchego-verification || true
             
             exit 1
           fi
@@ -89,8 +89,8 @@ jobs:
       - name: Verify SLSA provenance
         run: |
           slsa-verifier verify-artifact \
-            /artifacts/release/avalanchego \
-            --provenance-path /artifacts/release/avalanchego.build.slsa \
+            release/avalanchego \
+            --provenance-path release/avalanchego.build.slsa \
             --source-uri github.com/${{ github.repository }} \
             --builder-id https://github.com/${{ github.repository }}/.github/workflows/build-go-slsa3.yaml@refs/tags/${{ github.ref_name }}
 
@@ -100,7 +100,7 @@ jobs:
       #    RELEASE_TAG="${{ github.ref_name }}"
       #    ARTIFACT_NAME="go-flare-${RELEASE_TAG}-linux-amd64.zip"
       #    
-      #    cd artifacts/build
+      #    cd artifacts/release
       #    zip -r ../../$ARTIFACT_NAME .
       #    
       #    echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
