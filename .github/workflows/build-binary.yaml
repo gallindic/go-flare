@@ -54,34 +54,26 @@ jobs:
         run: |
           mkdir -p release/
 
-          mv artifacts/avalanchego-verification/avalanchego release/avalanchego-verification
+          mv artifacts/avalanchego-verification/avalanchego artifacts/avalanchego-verification
 
           tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego/
           mv artifacts/avalanchego/binaries/avalanchego release/
 
-          echo $(ls -la artifacts/)
-          echo "---"
-          echo $(ls -la artifacts/avalanchego-attestations)
-
           tar -xzf artifacts/avalanchego-attestations/folder.tgz -C artifacts/avalanchego-attestations/
-
-          echo "---"
-          echo $(ls -ls artifacts/avalanchego-attestations/)
-
           mv artifacts/avalanchego-attestations/*-slsa-attestations/avalanchego-binaries.build.slsa release/avalanchego.build.slsa
 
 
       - name: Verify reproducible build
         run: |
           HASH_MAIN=$(sha256sum release/avalanchego | awk '{print $1}')
-          HASH_VERIFY=$(sha256sum release/avalanchego-verification | awk '{print $1}')
+          HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "Hashes match"
           else
             echo "Hashes don't match"
 
-            diffoscope release/avalanchego release/avalanchego-verification || true
+            diffoscope release/avalanchego artifacts/avalanchego-verification || true
             
             exit 1
           fi
@@ -94,21 +86,47 @@ jobs:
             --source-uri github.com/${{ github.repository }} \
             --builder-id https://github.com/${{ github.repository }}/.github/workflows/build-go-slsa3.yaml@refs/tags/${{ github.ref_name }}
 
-#
-      #- name: Package release
-      #  run: |
-      #    RELEASE_TAG="${{ github.ref_name }}"
-      #    ARTIFACT_NAME="go-flare-${RELEASE_TAG}-linux-amd64.zip"
-      #    
-      #    cd artifacts/release
-      #    zip -r ../../$ARTIFACT_NAME .
-      #    
-      #    echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
-#
-      #- name: Release
-      #  uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
-      #  with:
-      #    body: "TODO"
-      #    files: |
-      #      ${{ env.ARTIFACT_NAME }}
-      #      *.intoto.jsonl
+      - name: Package release
+        run: |
+          RELEASE_TAG="${{ github.ref_name }}"
+          ARTIFACT_NAME="go-flare-${RELEASE_TAG}-linux-amd64.zip"
+          
+          cd release
+          zip -r ../$ARTIFACT_NAME .
+          
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV      
+
+      - name: Sign release binary
+        shell: bash
+        env:
+          COSIGN_EXPERIMENTAL: 1
+        run: |
+          cosign sign-blob --yes \
+            --output-signature ${{ env.ARTIFACT_NAME }}.sig \
+            --output-certificate ${{ env.ARTIFACT_NAME }}.pem \
+            ${{ env.ARTIFACT_NAME }}
+
+      - name: Verify release binary signature
+        shell: bash
+        env:
+          COSIGN_EXPERIMENTAL: 1
+        run: |
+          cosign verify-blob \
+            --certificate ${{ env.ARTIFACT_NAME }}.pem \
+            --certificate-identity=https://github.com/${{ github.repository }}/.github/workflows/build-binary.yaml@${{ github.ref }} \
+            --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
+            --signature ${{ env.ARTIFACT_NAME }}.sig \
+            ${{ env.ARTIFACT_NAME }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: "TODO"
+          files: ${{ env.ARTIFACT_NAME }}*
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-bin
+          path: |
+            ${{ env.ARTIFACT_NAME }}
