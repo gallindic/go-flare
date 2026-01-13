@@ -48,39 +48,48 @@ jobs:
 
       - name: Extract artifacts
         run: |
-          tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego
+          mkdir -p /release/
+
+          mv artifacts/avalanchego-verification/avalanchego release/avalanchego-verification
+
+          tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego/
+          mv artifacts/avalanchego/binaries/avalanchego release/
+
           echo $(ls -la artifacts/)
           echo "---"
-          echo $(ls -la artifacts/${{ inputs.build_artifact_name }}-attestations)
-          tar -xzf artifacts/${{ inputs.build_artifact_name }}-attestations/folder.tgz
+          echo $(ls -la artifacts/avalanchego-attestations)
+
+          tar -xzf artifacts/avalanchego-attestations/folder.tgz -C artifacts/avalanchego-attestations/
+
+          echo "---"
+          echo $(ls -ls artifacts/avalanchego-attestations/)
+
+          mv artifacts/avalanchego-attestations/*-slsa-attestations/avalanchego-binaries.build.slsa release/avalanchego.build.slsa
+
 
       - name: Verify reproducible build
         run: |
-          HASH_MAIN=$(sha256sum artifacts/avalanchego/binaries/avalanchego | awk '{print $1}')
-          HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification/avalanchego | awk '{print $1}')
+          HASH_MAIN=$(sha256sum release/avalanchego | awk '{print $1}')
+          HASH_VERIFY=$(sha256sum release/avalanchego-verification | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "Hashes match"
           else
             echo "Hashes don't match"
 
-            diffoscope artifacts/avalanchego/binaries/avalanchego artifacts/avalanchego-verification/avalanchego || true
+            diffoscope release/avalanchego release/avalanchego-verification || true
             
             exit 1
           fi
 
-      #- name: Verify SLSA provenance
-      #  run: |
-      #    slsa-verifier verify-artifact \
-      #      artifacts/avalanchego/binaries/avalanchego \
-      #      --provenance-path artifacts/${{ inputs.build_artifact_name }}-attestations/go-flare-binaries.build.slsa \
-      #      --source-uri github.com/${{ github.repository }} \
-      #      --builder-id https://github.com/${{ github.repository }}/.github/workflows/builder_slsa3.yaml@refs/tags/${{ github.ref_name }}
+      - name: Verify SLSA provenance
+        run: |
+          slsa-verifier verify-artifact \
+            release/avalanchego \
+            --provenance-path release/avalanchego.build.slsa \
+            --source-uri github.com/${{ github.repository }} \
+            --builder-id https://github.com/${{ github.repository }}/.github/workflows/builder_slsa3.yaml@refs/tags/${{ github.ref_name }}
 
-      #- name: Download attestations
-      #  uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-      #  with:
-      #    name: ${{ needs.build.outputs.attestations-download-name }}
 #
       #- name: Package release
       #  run: |
