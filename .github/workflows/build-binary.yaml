@@ -16,7 +16,7 @@ jobs:
       build_artifact_name: "avalanchego"
 
   build-verification:
-    #if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag'
     name: Go Verification Build
     uses: ./.github/workflows/build-go-verification.yaml
     with:
@@ -28,7 +28,7 @@ jobs:
     name: Release
     runs-on: "ubuntu-${{ vars.UBUNTU_VERSION }}"
     needs: [build, build-verification]
-    #if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag'
     permissions:
       contents: write
       id-token: write
@@ -54,26 +54,23 @@ jobs:
         run: |
           mkdir -p release/
 
-          mv artifacts/avalanchego-verification/avalanchego artifacts/avalanchego-verification
-
           tar -xzf artifacts/avalanchego/folder.tgz -C artifacts/avalanchego/
           mv artifacts/avalanchego/binaries/avalanchego release/
 
           tar -xzf artifacts/avalanchego-attestations/folder.tgz -C artifacts/avalanchego-attestations/
           mv artifacts/avalanchego-attestations/*-slsa-attestations/avalanchego-binaries.build.slsa release/avalanchego.build.slsa
 
-
       - name: Verify reproducible build
         run: |
           HASH_MAIN=$(sha256sum release/avalanchego | awk '{print $1}')
-          HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification | awk '{print $1}')
+          HASH_VERIFY=$(sha256sum artifacts/avalanchego-verification/avalanchego | awk '{print $1}')
           
           if [ "$HASH_MAIN" = "$HASH_VERIFY" ]; then
             echo "Hashes match"
           else
             echo "Hashes don't match"
 
-            diffoscope release/avalanchego artifacts/avalanchego-verification || true
+            diffoscope release/avalanchego artifacts/avalanchego-verification/avalanchego || true
             
             exit 1
           fi
