@@ -81,7 +81,7 @@ jobs:
       - name: Verify SLSA provenance
         run: |
           slsa-verifier verify-artifact \
-            r${{ env.AVALANCHEGO_BINARY }} \
+            ${{ env.AVALANCHEGO_BINARY }} \
             --provenance-path ${{ env.SLSA_PROVENANCE }} \
             --source-uri github.com/${{ github.repository }} \
             --builder-id https://github.com/${{ github.repository }}/.github/workflows/build-go-slsa3.yaml@refs/tags/${{ github.ref_name }}
